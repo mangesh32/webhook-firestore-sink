@@ -1,0 +1,21 @@
+<configuration>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- encoders are assigned the type
+             ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36}:%L - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="io.micronaut.discovery.registration.AutoRegistration" level="OFF"/>
+    <logger name="io.micronaut.management.health.indicator.HealthResult" level="OFF"/>
+    <logger name="org.hibernate.orm.deprecation" level="OFF"/>
+    <root level="info">
+        <appender-ref ref="STDOUT" />
+    </root>
+    # logs the SQL statements
+    <logger name="org.hibernate.SQL" level="DEBUG" />
+    # Logs the JDBC parameters passed to a query
+    <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="TRACE" />
+</configuration>

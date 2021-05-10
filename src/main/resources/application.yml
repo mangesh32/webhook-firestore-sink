@@ -1,0 +1,28 @@
+micronaut:
+  server:
+    port: 8090
+    enabled: false
+---
+# Management Endpoints in /info and /health etc.
+endpoints:
+  all:
+    port: 8025
+    sensitive: false
+  info:
+    config:
+      enabled: true
+    refresh:
+      enabled: true
+---
+# Custom data in Endpoint /info
+info:
+  demo:
+    mystring : "webhook-firestore-sink"
+---
+# Jackson Reflection free JSON processing
+jackson:
+  bean-introspection-module: true
+  module-scan: true
+  json-view:
+    enabled: true
+---

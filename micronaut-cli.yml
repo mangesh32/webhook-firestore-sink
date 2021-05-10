@@ -1,0 +1,5 @@
+profile: service
+defaultPackage: tech.skylo
+---
+testFramework: spock
+sourceLanguage: groovy
