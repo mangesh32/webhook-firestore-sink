@@ -165,7 +165,7 @@ jib {
     }
     container {
         jvmFlags = ['-Xms2048m', '-Xmx8192m', '-Xdebug']
-        mainClass = 'tech.skylo.Application'
+        mainClass = 'sink.Application'
         creationTime = 'USE_CURRENT_TIMESTAMP'
     }
 }

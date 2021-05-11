@@ -1,5 +1,5 @@
 profile: service
-defaultPackage: tech.skylo
+defaultPackage: sink
 ---
 testFramework: spock
 sourceLanguage: groovy
