@@ -11,4 +11,4 @@ out/
 .project
 .settings
 .classpath
-key.json
+src/main/resources/key.json
