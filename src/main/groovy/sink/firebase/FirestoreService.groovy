@@ -20,10 +20,12 @@ class FirestoreService {
 
     FirestoreService(){
 
-        InputStream serviceAccount = new FileInputStream("key.json");
-        GoogleCredentials credentials = GoogleCredentials.fromStream(serviceAccount);
+//        InputStream serviceAccount = new FileInputStream("key.json");
+//        GoogleCredentials credentials = GoogleCredentials.fromStream(serviceAccount);
+        GoogleCredentials credentials = GoogleCredentials.getApplicationDefault();
         FirebaseOptions options = new FirebaseOptions.Builder()
                 .setCredentials(credentials)
+                .setProjectId("skysquaddemo")
                 .build();
         FirebaseApp.initializeApp(options)
         db = FirestoreClient.getFirestore()
