@@ -19,6 +19,7 @@ import io.micronaut.http.MediaType
 import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Controller
 import io.micronaut.http.annotation.Get
+import io.micronaut.http.annotation.Header
 import io.micronaut.http.annotation.Post
 import io.micronaut.http.annotation.Produces
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -66,7 +67,18 @@ class WebhookController {
     }
 
     @Post("/firestore-alerts")
-    HttpResponse pushAlertsToFirestore(@Body JsonData data) {
+    HttpResponse pushAlertsToFirestore(@Header String secret, @Body JsonData data) {
+
+        log.info("Alert Received = {}", data)
+
+        if(!secret || secret != 'secret'){
+            return HttpResponse.unauthorized()
+        }
+
+        if(!data.threatValue){
+            log.info("Alert Not Eligible, Ignoring")
+            return HttpResponse.ok("Alert Skipped")
+        }
 
         Map incidentMap = [
                 0: [ incident : 'Fire', alertType: 'Fire Alert'],

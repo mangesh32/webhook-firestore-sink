@@ -20,4 +20,16 @@ class JsonData implements Serializable{
     @JsonProperty("1512_2")
     String threatValue
 
+
+    @Override
+    public String toString() {
+        return "JsonData{" +
+                "hubid='" + hubid + '\'' +
+                ", latitude=" + latitude +
+                ", longitude=" + longitude +
+                ", epochTimeMillis=" + epochTimeMillis +
+                ", threatFlag=" + threatFlag +
+                ", threatValue='" + threatValue + '\'' +
+                '}';
+    }
 }
