@@ -1,10 +1,20 @@
 package sink.controller.dto
 
+import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
+import groovy.util.logging.Slf4j
 
+@Slf4j
 @JsonIgnoreProperties(ignoreUnknown = true)
 class JsonData implements Serializable{
+
+    JsonData() {}
+
+    @JsonCreator
+    JsonData(String message) {
+        log.info("JsonData => {}",message)
+    }
 
     String hubid
 

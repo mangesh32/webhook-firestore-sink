@@ -17,6 +17,7 @@ import io.micronaut.core.version.annotation.Version
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.MediaType
 import io.micronaut.http.annotation.Body
+import io.micronaut.http.annotation.Consumes
 import io.micronaut.http.annotation.Controller
 import io.micronaut.http.annotation.Get
 import io.micronaut.http.annotation.Header
@@ -36,6 +37,7 @@ import javax.inject.Inject
 class WebhookController {
 
     Firestore db
+    ObjectMapper mapper = new ObjectMapper()
 
     WebhookController(FirestoreService firestoreService){
         db = firestoreService.getFirestore()
@@ -67,7 +69,10 @@ class WebhookController {
     }
 
     @Post("/firestore-alerts")
-    HttpResponse pushAlertsToFirestore(@Header String secret, @Body JsonData data) {
+    @Consumes(MediaType.APPLICATION_JSON)
+    HttpResponse pushAlertsToFirestore(@Header String secret, @Body String body) {
+
+        JsonData data = mapper.readValue(body, JsonData.class)
 
         log.info("Alert Received = {}", data)
 
