@@ -1,5 +1,6 @@
 package sink.controller
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.api.core.ApiFuture
 import com.google.cloud.Timestamp
@@ -25,6 +26,8 @@ import io.micronaut.http.annotation.Post
 import io.micronaut.http.annotation.Produces
 import io.swagger.v3.oas.annotations.tags.Tag
 import sink.controller.dto.JsonData
+import sink.controller.dto.KeyValueMap
+import sink.controller.dto.Payload
 import sink.firebase.FirestoreService
 
 import javax.inject.Inject
@@ -72,31 +75,48 @@ class WebhookController {
     @Consumes(MediaType.APPLICATION_JSON)
     HttpResponse pushAlertsToFirestore(@Header String secret, @Body String body) {
 
-        JsonData data = mapper.readValue(body, JsonData.class)
-
-        log.info("Alert Received = {}", data)
-
         if(!secret || secret != 'secret'){
             return HttpResponse.unauthorized()
         }
 
-        if(!data.threatValue){
+        List<Payload> payloads = mapper.readValue(body, new TypeReference<List<Payload>>() {})
+        Payload payload = null
+        if(payloads){
+            payload = payloads[0]
+        }
+
+        log.info("Alert Received = {}", payload)
+
+        if(!payload || !payload.jsonData || !payload.jsonData.keyValueMap || !payload.jsonData.keyValueMap.threatValue){
             log.info("Alert Not Eligible, Ignoring")
             return HttpResponse.ok("Alert Skipped")
         }
 
+        KeyValueMap data = payload.jsonData.keyValueMap
+
         Map incidentMap = [
-                0: [ incident : 'Fire', alertType: 'Fire Alert'],
-                1: [ incident : 'Human', alertType: 'Human Alert'],
-                17: [ incident : 'Cat', alertType: 'Animal Alert'],
-                18: [ incident : 'Dog', alertType: 'Animal Alert'],
-                19: [ incident : 'Horse', alertType: 'Animal Alert'],
-                20: [ incident : 'Sheep', alertType: 'Animal Alert'],
-                21: [ incident : 'Cow', alertType: 'Animal Alert'],
-                22: [ incident : 'Elephant', alertType: 'Animal Alert'],
-                23: [ incident : 'Bear', alertType: 'Animal Alert'],
-                24: [ incident : 'Zebra', alertType: 'Animal Alert'],
-                25: [ incident : 'Giraffe', alertType: 'Animal Alert'],
+                0:  [ incident : 'Fire',
+                      alertType: 'Fire Alert'],
+                1:  [ incident : 'Human',
+                      alertType: 'Human Alert'],
+                17: [ incident : 'Cat',
+                      alertType: 'Animal Alert'],
+                18: [ incident : 'Dog',
+                      alertType: 'Animal Alert'],
+                19: [ incident : 'Horse',
+                      alertType: 'Animal Alert'],
+                20: [ incident : 'Sheep',
+                      alertType: 'Animal Alert'],
+                21: [ incident : 'Cow',
+                      alertType: 'Animal Alert'],
+                22: [ incident : 'Elephant',
+                      alertType: 'Animal Alert'],
+                23: [ incident : 'Bear',
+                      alertType: 'Animal Alert'],
+                24: [ incident : 'Zebra',
+                      alertType: 'Animal Alert'],
+                25: [ incident : 'Giraffe',
+                      alertType: 'Animal Alert'],
         ]
 
         String incident = null
@@ -110,11 +130,8 @@ class WebhookController {
             if(data.latitude && data.longitude){
                 location = new GeoPoint(data.latitude, data.longitude)
             }
-            if(data.epochTimeMillis){
-                timestamp = Timestamp.of(new Date(data.epochTimeMillis))
-            }
-            if(data.threatFlag != null){
-                log.info("Threat Flag=" + data.threatFlag)
+            if(payload.epochTimeMillis){
+                timestamp = Timestamp.of(new Date(payload.epochTimeMillis))
             }
             if(data.threatValue){
                 List arr = data.threatValue.split(",")
