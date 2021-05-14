@@ -53,30 +53,19 @@ class WebhookController {
         HttpResponse.ok("HelloWorld")
     }
 
-    @Get("/firestore-alerts")
-    @Produces(MediaType.APPLICATION_JSON)
-    HttpResponse getAlerts() {
-
-        def response = new ArrayList()
-
-        ApiFuture<QuerySnapshot> query = db.collection("threats").get()
-
-        // query.get() blocks on response
-        QuerySnapshot querySnapshot = query.get();
-        List<QueryDocumentSnapshot> documents = querySnapshot.getDocuments()
-        for (QueryDocumentSnapshot document : documents) {
-            response.add(document.getData())
-        }
-
-        return HttpResponse.ok(response)
-    }
-
     @Post("/firestore-alerts")
     @Consumes(MediaType.APPLICATION_JSON)
     HttpResponse pushAlertsToFirestore(@Header String secret, @Body String body) {
 
         if(!secret || secret != 'secret'){
             return HttpResponse.unauthorized()
+        }
+
+        def slurper = new JsonSlurper()
+        def parsedData = slurper.parseText(body)
+        if(!(parsedData instanceof List<Payload>)){
+            log.info("Hi from DAAS, msg=>{}", body)
+            return HttpResponse.ok("No!!😝")
         }
 
         List<Payload> payloads = mapper.readValue(body, new TypeReference<List<Payload>>() {})

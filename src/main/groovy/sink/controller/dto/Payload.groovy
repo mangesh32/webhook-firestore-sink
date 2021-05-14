@@ -9,19 +9,10 @@ import groovy.util.logging.Slf4j
 @JsonIgnoreProperties(ignoreUnknown = true)
 class Payload implements Serializable{
 
-    Payload() {}
-
-    @JsonCreator
-    Payload(String message) {
-        log.info("JsonData => {}",message)
-    }
-
     String tenantId
     String hubId
     Long epochTimeMillis
-
     JsonData jsonData
-
 
     @Override
     public String toString() {
