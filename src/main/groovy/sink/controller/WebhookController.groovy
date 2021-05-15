@@ -108,6 +108,7 @@ class WebhookController {
                       alertType: 'Animal Alert'],
         ]
 
+        String hubId = null
         String incident = null
         String alertType = null
         GeoPoint location = null
@@ -118,6 +119,9 @@ class WebhookController {
         if(data != null){
             if(data.latitude && data.longitude){
                 location = new GeoPoint(data.latitude, data.longitude)
+            }
+            if(payload.hubId){
+                hubId = payload.hubId
             }
             if(payload.epochTimeMillis){
                 timestamp = Timestamp.of(new Date(payload.epochTimeMillis))
@@ -146,6 +150,7 @@ class WebhookController {
         DocumentReference docRef = db.collection("threats").document()
         //asynchronously write data
         ApiFuture<WriteResult> result = docRef.set([
+                "hubId": hubId,
                 "incident": incident,
                 "alertType": alertType,
                 "probability": probability,
