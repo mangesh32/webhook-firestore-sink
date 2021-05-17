@@ -111,6 +111,7 @@ class WebhookController {
         String hubId = null
         String incident = null
         String alertType = null
+        String address = null
         GeoPoint location = null
         Timestamp timestamp = null
         Integer probability = null
@@ -119,6 +120,17 @@ class WebhookController {
         if(data != null){
             if(data.latitude && data.longitude){
                 location = new GeoPoint(data.latitude, data.longitude)
+
+                def get = new URL("https://maps.googleapis.com/maps/api/geocode/json?latlng=${data.latitude},${data.longitude}&key=AIzaSyArCVMTlwXjiFxqynyhm5OH-F5weiQABbQ").openConnection()
+                def getRC = get.getResponseCode()
+                log.info("Geocode API Response="+getRC)
+                if (getRC == 200) {
+                    def geocodeResponse = slurper.parseText(get.getInputStream().getText())
+                    if(geocodeResponse && geocodeResponse.results) {
+                        address = geocodeResponse.results[0].formatted_address
+                        log.info('Address='+ address)
+                    }
+                }
             }
             if(payload.hubId){
                 hubId = payload.hubId
@@ -155,6 +167,7 @@ class WebhookController {
                 "alertType": alertType,
                 "probability": probability,
                 "location": location,
+                "address": address,
                 "time": timestamp,
                 "desc": desc
         ])
