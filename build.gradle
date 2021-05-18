@@ -70,7 +70,23 @@ repositories {
         url "https://dl.bintray.com/micronaut/core-releases-local"
     }
     maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
-  
+    maven {
+        url "https://packages.confluent.io/maven/"
+    }
+    maven {
+        credentials {
+            username "admin"
+            password "AP3o5A4zcVU2LuGBMQeSN7R2ZBA"
+        }
+        url "https://skyloeng.jfrog.io/artifactory/libs-snapshot"
+    }
+    maven {
+        credentials {
+            username "admin"
+            password "AP3o5A4zcVU2LuGBMQeSN7R2ZBA"
+        }
+        url "https://skyloeng.jfrog.io/artifactory/libs-release"
+    }
 }
 
 dependencyManagement {
@@ -115,6 +131,10 @@ dependencies {
     compile "javax.annotation:javax.annotation-api"
     compileOnly "io.micronaut:micronaut-inject-groovy"
     implementation group: 'org.codehaus.groovy', name: 'groovy-json', version: '3.0.8'
+
+    compile "io.micronaut.kafka:micronaut-kafka"
+    compile group: 'io.confluent', name: 'kafka-avro-serializer', version: '5.3.0'
+    compile(group: 'tech.skylo', name: 'skylo-avro-schema', version: '6.0-20210325.065028-3')
 
 
     //==== Micronaut Swagger/OpenAPI

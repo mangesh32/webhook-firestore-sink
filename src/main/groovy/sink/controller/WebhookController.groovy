@@ -12,6 +12,7 @@ import com.google.cloud.firestore.QuerySnapshot
 import com.google.cloud.firestore.WriteResult
 import com.google.gson.Gson
 import groovy.json.JsonSlurper
+import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import io.micronaut.context.ApplicationContext
 import io.micronaut.core.version.annotation.Version
@@ -25,13 +26,16 @@ import io.micronaut.http.annotation.Header
 import io.micronaut.http.annotation.Post
 import io.micronaut.http.annotation.Produces
 import io.swagger.v3.oas.annotations.tags.Tag
+import sink.Constants
+import sink.async.NotificationMessageClient
+import sink.controller.dto.EmailTokenKey
 import sink.controller.dto.JsonData
 import sink.controller.dto.KeyValueMap
 import sink.controller.dto.Payload
 import sink.firebase.FirestoreService
+import tech.skylo.avro.NotificationMessage
 
 import javax.inject.Inject
-
 
 @Slf4j
 @Controller("/webhook")
@@ -39,8 +43,13 @@ import javax.inject.Inject
 @Version("1")
 class WebhookController {
 
+
+    Map<String, Long> coolOffMap = new HashMap()
+
     Firestore db
     ObjectMapper mapper = new ObjectMapper()
+
+    @Inject NotificationMessageClient notificationMessageClient
 
     WebhookController(FirestoreService firestoreService){
         db = firestoreService.getFirestore()
@@ -118,20 +127,7 @@ class WebhookController {
         String desc = null
 
         if(data != null){
-            if(data.latitude && data.longitude){
-                location = new GeoPoint(data.latitude, data.longitude)
 
-                def get = new URL("https://maps.googleapis.com/maps/api/geocode/json?latlng=${data.latitude},${data.longitude}&key=AIzaSyArCVMTlwXjiFxqynyhm5OH-F5weiQABbQ").openConnection()
-                def getRC = get.getResponseCode()
-                log.info("Geocode API Response="+getRC)
-                if (getRC == 200) {
-                    def geocodeResponse = slurper.parseText(get.getInputStream().getText())
-                    if(geocodeResponse && geocodeResponse.results) {
-                        address = geocodeResponse.results[0].formatted_address
-                        log.info('Address='+ address)
-                    }
-                }
-            }
             if(payload.hubId){
                 hubId = payload.hubId
             }
@@ -150,11 +146,34 @@ class WebhookController {
 
                     incident = incidentMap.get(key).get("incident")
                     alertType = incidentMap.get(key).get("alertType")
+
+                    if(coolOffMap.containsKey(alertType) && (System.currentTimeMillis() - coolOffMap.get(alertType) <= 5000)){
+                        log.warn("Cool down in progress")
+                        return HttpResponse.ok("Cool down in progress")
+                    }
+                    else{
+                      coolOffMap[alertType] = System.currentTimeMillis()
+                    }
+
                     probability = arr[1] as Integer
                     if(arr.size() > 2)
                         desc = arr.subList(2,arr.size()).join(", ")
 
                     log.info("Threat incident={}, alertType={}", incident, alertType)
+                }
+            }
+            if(data.latitude && data.longitude){
+                location = new GeoPoint(data.latitude, data.longitude)
+
+                def get = new URL("https://maps.googleapis.com/maps/api/geocode/json?latlng=${data.latitude},${data.longitude}&key=${Constants.MAPS_KEY}").openConnection()
+                def getRC = get.getResponseCode()
+                log.info("Geocode API Response="+getRC)
+                if (getRC == 200) {
+                    def geocodeResponse = slurper.parseText(get.getInputStream().getText())
+                    if(geocodeResponse && geocodeResponse.results) {
+                        address = geocodeResponse.results[0].formatted_address
+                        log.info('Address='+ address)
+                    }
                 }
             }
         }
@@ -175,8 +194,49 @@ class WebhookController {
         // result.get() blocks on response
         log.info("Added Alert to Firestore, Update time : " + result.get().getUpdateTime())
 
+        sendNotification(alertType, incident, payload.epochTimeMillis, location, hubId, payload.tenantId)
+
         HttpResponse.created("Alert Created")
     }
 
+    void sendNotification(String alertType, String incident, Long alertTime, GeoPoint location, String hubId, String tenant){
+        Map<String, String> keyValue = new HashMap<String, String>()
+
+
+        keyValue.put(EmailTokenKey.SENSOR.toString(), "Sky Squad")
+        keyValue.put(EmailTokenKey.ALERT_TYPE.toString(), alertType)
+        keyValue.put(EmailTokenKey.ALERT_SEVERITY.toString(), "WARNING");
+        keyValue.put(EmailTokenKey.ALERT_TEXT.toString(), incident+" detected !!");
+        keyValue.put(EmailTokenKey.ALERT_TIME.toString(), alertTime.toString());
+        keyValue.put(EmailTokenKey.ALERT_LOCATION_LAT.toString(), location.latitude.toString());
+        keyValue.put(EmailTokenKey.ALERT_LOCATION_LNG.toString(), location.longitude.toString());
+        keyValue.put(EmailTokenKey.HUB_ID.toString(), hubId);
+        keyValue.put(EmailTokenKey.ASSET_NAME.toString(), hubId)
+        keyValue.put(EmailTokenKey.ALERT_DESC.toString(), alertType);
+
+        NotificationMessage notificationMessage = NotificationMessage.newBuilder()
+                .setCreatedBy(hubId)
+                .setHubId(hubId)
+                .setTenantSlug(tenant)
+                .setNotificationMessage(incident+" detected !!")
+                .setProduct("daas")
+                .setAlertCategory("HUB_EDGE_ALERT")
+                .setAlertSeverity("WARNING")
+                .setAlertStateCode(1)
+                .setAlertText(incident+" detected !!")
+                .setEpochTimeMillis(alertTime)
+                .setLatitude(location.latitude)
+                .setLongitude(location.longitude)
+                .setKeyValueMap(keyValue)
+                .setMsgCounter(1)
+                .setToEmails("theskysquaddemo@gmail.com;mangesh_ghodki@persistent.com")
+                .setToPhoneNumbers("+1 4156326420;+91 9981097791")
+                .build();
+
+        notificationMessageClient.sendNotificationMessage("notification", hubId, notificationMessage)
+
+
+
+    }
 
 }

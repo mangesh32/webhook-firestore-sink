@@ -12,3 +12,5 @@ out/
 .settings
 .classpath
 src/main/resources/key.json
+application.yml
+Constants.groovy

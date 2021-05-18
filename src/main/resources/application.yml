@@ -26,3 +26,28 @@ jackson:
   json-view:
     enabled: true
 ---
+kafka:
+  bootstrap:
+    servers: pkc-lgk0v.us-west1.gcp.confluent.cloud:9092
+  security:
+    protocol: SASL_SSL
+  sasl:
+    mechanism: PLAIN
+    jaas:
+      config: org.apache.kafka.common.security.plain.PlainLoginModule required username="DF2VARK6NKYQSSGG"
+        password="K3jIzZ+vVQpsv6qpfFq9Z6rNbKsjguKtgD/QEk3T1KTitXQjOX1hxn8LrsfhiGgF";
+schema:
+  registry:
+    url: https://psrc-e8157.us-east-2.aws.confluent.cloud
+    basic:
+      auth:
+        user:
+          info: ZM7TDZPJI332OB5V:pWT3EbrK4eUPFzB9SkLkksFb7wWNmpK7yFRAhCsg0xKRWZuCZcgB3GszDJ33RPHT
+  basic:
+    auth:
+      credentials:
+        source: USER_INFO
+  ssl:
+    endpoint:
+      identification:
+        algorithm: https
